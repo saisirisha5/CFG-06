@@ -1,6 +1,55 @@
 const CounsellingSession = require('../models/CounsellingSession');
 const Questionnaire = require('../models/Questionnaire');
 const Counsellor = require('../models/Counsellor');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+
+// Initialize Gemini AI
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+// --- New Helper Function to Generate Questions ---
+const generateQuestionsWithGemini = async (regionalData) => {
+    try {
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash"});
+
+        const prompt = `
+            You are an expert in public health and community medicine in India. 
+            Based on the following regional data, generate a structured JSON array of 5 survey questions.
+            The questions should be a mix of 'MCQ', 'YesNo', and 'Rating' (scale 1-5).
+            The JSON output MUST be a valid array of objects, with no extra text or explanations.
+            Each object in the array must have "questionText", "questionType", and if it's an "MCQ", an "options" array.
+
+            Regional Data:
+            - Demographics: ${regionalData.demographics}
+            - Nutrition Status: ${regionalData.nutritionStatus}
+            - Health Trends: ${regionalData.healthTrends}
+            - Service Gaps: ${regionalData.serviceGaps}
+            - Behavioral Data: ${regionalData.behavioralData}
+            - Education Levels: ${regionalData.educationLevels}
+            - Language/Tech Access: ${regionalData.languageTechAccess}
+
+            Provide ONLY the JSON array. Example format:
+            [
+                { "questionText": "Question 1?", "questionType": "MCQ", "options": ["A", "B", "C"] },
+                { "questionText": "Question 2?", "questionType": "YesNo" }
+            ]
+        `;
+
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const text = response.text();
+        
+        // Clean the response to ensure it's valid JSON
+        const cleanedJson = text.replace(/```json/g, '').replace(/```/g, '').trim();
+        return JSON.parse(cleanedJson);
+
+    } catch (error) {
+        console.error("Error generating questions with Gemini:", error);
+        // Fallback to default questions if the API fails
+        return [
+            { questionText: "API Error: Could not generate dynamic questions. Do you have access to clean drinking water?", questionType: "YesNo" }
+        ];
+    }
+};
 
 // Helper function to find and "notify" the nearest counsellor
 const findAndNotifyNearestCounsellor = async (session) => {
@@ -58,20 +107,13 @@ const createSession = async (req, res) => {
     
     const createdSession = await newSession.save();
 
-    // Create the corresponding questionnaire
+    // --- Generate Questions using Gemini ---
+    const generatedQuestions = await generateQuestionsWithGemini(createdSession.regionalData);
+
+    // Create the corresponding questionnaire with dynamic questions
     const newQuestionnaire = new Questionnaire({
         session: createdSession._id,
-        questions: [
-            {
-                questionText: "What is the primary source of Vitamin A?",
-                questionType: "MCQ",
-                options: ["Carrots", "Rice", "Milk", "Sugar"]
-            },
-            {
-                questionText: "Should drinking water be boiled?",
-                questionType: "YesNo"
-            }
-        ]
+        questions: generatedQuestions // Use the questions from Gemini
     });
 
     await newQuestionnaire.save();
@@ -103,16 +145,19 @@ const getMySessions = async (req, res) => {
 const getSessionById = async (req, res) => {
   try {
     const session = await CounsellingSession.findById(req.params.id);
-
-    if (session) {
-      // Optional: Check if counsellor is assigned to this session
-      // if (session.assignedCounsellor.toString() !== req.user._id.toString()) {
-      //   return res.status(403).json({ message: 'Not authorized for this session' });
-      // }
-      res.json(session);
-    } else {
-      res.status(404).json({ message: 'Session not found' });
+    if (!session) {
+        return res.status(404).json({ message: 'Session not found' });
     }
+    
+    const questionnaire = await Questionnaire.findOne({ session: session._id });
+
+    // Optional: Check if counsellor is assigned to this session
+    // if (session.assignedCounsellor.toString() !== req.user._id.toString()) {
+    //   return res.status(403).json({ message: 'Not authorized for this session' });
+    // }
+    
+    res.json({ session, questions: questionnaire ? questionnaire.questions : [] });
+
   } catch (error) {
     res.status(500).json({ message: 'Error fetching session details', error: error.message });
   }
