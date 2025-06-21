@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
-import { Image, Platform, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator, Modal, FlatList } from "react-native";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, Image, Modal, Platform, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import Chatbot from "./chatbot";
 
 const uiKeys = [
   "foundation",
@@ -71,80 +72,83 @@ export default function Index() {
   }, [language]);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#3a3a8a' }}>
-      <View style={styles.container}>
-        {/* Logo */}
-        <Image source={require("../assets/images/logo.png")} style={styles.logo} />
-        {/* Title */}
-        <Text style={styles.title1}>{translations.foundation}</Text>
-        <Text style={styles.title2}>{translations.motherChild}</Text>
-        <Text style={styles.title3}>{translations.india}</Text>
+    <View style={{ flex: 1, position: 'relative' }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#3a3a8a' }}>
+        <View style={styles.container}>
+          {/* Logo */}
+          <Image source={require("../assets/images/logo.png")} style={styles.logo} />
+          {/* Title */}
+          <Text style={styles.title1}>{translations.foundation}</Text>
+          <Text style={styles.title2}>{translations.motherChild}</Text>
+          <Text style={styles.title3}>{translations.india}</Text>
 
-        {/* Inputs */}
-        <TextInput placeholder={translations.username} placeholderTextColor="#ccc" style={styles.input} />
-        <TextInput placeholder={translations.password} placeholderTextColor="#ccc" secureTextEntry style={styles.input} />
-        {/* Language Dropdown */}
-        <TouchableOpacity
-          style={{
-            backgroundColor: '#fff2',
-            borderRadius: 24,
-            paddingHorizontal: 20,
-            height: 48,
-            justifyContent: 'center',
-            marginBottom: 16,
-            width: '100%',
-          }}
-          onPress={() => setModalVisible(true)}
-          disabled={loading}
-        >
-          <Text style={{ color: '#fff', fontSize: 16 }}>{language}</Text>
-        </TouchableOpacity>
-        <Modal
-          visible={modalVisible}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setModalVisible(false)}
-        >
-          <TouchableOpacity style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
-            <View style={styles.dropdownModal}>
-              {Object.keys(languageCodes).map((lang) => (
-                <TouchableOpacity
-                  key={lang}
-                  style={{
-                    paddingVertical: 12,
-                    paddingHorizontal: 20,
-                    backgroundColor: language === lang ? '#3a3a8a' : '#fff',
-                    borderRadius: 8,
-                    marginBottom: 4,
-                  }}
-                  onPress={() => {
-                    setLanguage(lang as keyof typeof languageCodes);
-                    setModalVisible(false);
-                  }}
-                >
-                  <Text style={{ color: language === lang ? '#fff' : '#3a3a8a', fontWeight: 'bold', fontSize: 16 }}>{lang}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+          {/* Inputs */}
+          <TextInput placeholder={translations.username} placeholderTextColor="#ccc" style={styles.input} />
+          <TextInput placeholder={translations.password} placeholderTextColor="#ccc" secureTextEntry style={styles.input} />
+          {/* Language Dropdown */}
+          <TouchableOpacity
+            style={{
+              backgroundColor: '#fff2',
+              borderRadius: 24,
+              paddingHorizontal: 20,
+              height: 48,
+              justifyContent: 'center',
+              marginBottom: 16,
+              width: '100%',
+            }}
+            onPress={() => setModalVisible(true)}
+            disabled={loading}
+          >
+            <Text style={{ color: '#fff', fontSize: 16 }}>{language}</Text>
           </TouchableOpacity>
-        </Modal>
-        {loading && <ActivityIndicator color="#fff" style={{ marginBottom: 16 }} />}
-        {/* Login Button */}
-        <TouchableOpacity style={styles.loginBtn} disabled={loading}>
-          <Text style={styles.loginText}>{translations.login}</Text>
-        </TouchableOpacity>
+          <Modal
+            visible={modalVisible}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setModalVisible(false)}
+          >
+            <TouchableOpacity style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
+              <View style={styles.dropdownModal}>
+                {Object.keys(languageCodes).map((lang) => (
+                  <TouchableOpacity
+                    key={lang}
+                    style={{
+                      paddingVertical: 12,
+                      paddingHorizontal: 20,
+                      backgroundColor: language === lang ? '#3a3a8a' : '#fff',
+                      borderRadius: 8,
+                      marginBottom: 4,
+                    }}
+                    onPress={() => {
+                      setLanguage(lang as keyof typeof languageCodes);
+                      setModalVisible(false);
+                    }}
+                  >
+                    <Text style={{ color: language === lang ? '#fff' : '#3a3a8a', fontWeight: 'bold', fontSize: 16 }}>{lang}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </TouchableOpacity>
+          </Modal>
+          {loading && <ActivityIndicator color="#fff" style={{ marginBottom: 16 }} />}
+          {/* Login Button */}
+          <TouchableOpacity style={styles.loginBtn} disabled={loading}>
+            <Text style={styles.loginText}>{translations.login}</Text>
+          </TouchableOpacity>
 
-        {/* Forgot Password */}
-        <TouchableOpacity>
-          <Text style={styles.forgot}>{translations.forgot}</Text>
-        </TouchableOpacity>
-      </View>
-      {/* Supported by */}
-      <View style={styles.supportedByContainer}>
-        <Text style={styles.supportedByText}>{translations.supportedBy}</Text>
-        <Image source={require("../assets/images/logo.png")} style={styles.koitaLogo} />
-      </View>
-    </SafeAreaView>
+          {/* Forgot Password */}
+          <TouchableOpacity>
+            <Text style={styles.forgot}>{translations.forgot}</Text>
+          </TouchableOpacity>
+        </View>
+        {/* Supported by */}
+        <View style={styles.supportedByContainer}>
+          <Text style={styles.supportedByText}>{translations.supportedBy}</Text>
+          <Image source={require("../assets/images/logo.png")} style={styles.koitaLogo} />
+        </View>
+      </SafeAreaView>
+      <Chatbot />
+    </View>
   );
 }
 
