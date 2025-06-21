@@ -1,2 +1,4 @@
 node_modules
 .env
+scripts/seed_counsellors_mongo.py
+.rest

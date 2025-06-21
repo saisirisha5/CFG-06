@@ -1,6 +1,10 @@
 const mongoose = require('mongoose');
 
 const counsellorSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+  },
   email: {
     type: String,
     required: true,
@@ -20,11 +24,15 @@ const counsellorSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  profilePic: {
+    type: String, // URL string
+    required: false, // Optional for now
+  },
   location: {
     type: {
       type: String,
       enum: ['Point'],
-      required: false, // Can be made required later
+      required: false,
     },
     coordinates: {
       type: [Number], // [longitude, latitude]
@@ -37,4 +45,4 @@ counsellorSchema.index({ location: '2dsphere' });
 
 const Counsellor = mongoose.model('Counsellor', counsellorSchema);
 
-module.exports = Counsellor; 
+module.exports = Counsellor;
