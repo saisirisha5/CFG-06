@@ -50,7 +50,10 @@ export default function Chatbot() {
           style={[
             styles.chatWindow,
             {
-              transform: [{ translateY: slideAnim.interpolate({ inputRange: [0, 1], outputRange: [400, 0] }) }],
+              transform: [{ translateY: slideAnim.interpolate({ inputRange: [0, 1], outputRange: [Platform.OS === 'web' ? 800 : 800, 0] }) }],
+              height: '100%',
+              borderTopLeftRadius: 0,
+              borderTopRightRadius: 0,
             },
           ]}
         >
@@ -114,10 +117,12 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    height: 400,
+    top: 0,
+    height: '100%',
     backgroundColor: '#fff',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    // Remove border radius for full screen
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.2,
@@ -129,10 +134,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 16,
+    paddingTop: 32, // Increased top padding for title
+    paddingBottom: 12,
+    paddingHorizontal: 16,
     backgroundColor: '#3a3a8a',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
   },
   headerTitle: {
     color: '#fff',
@@ -153,11 +160,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#eee',
     alignSelf: 'flex-start',
   },
-  inputRow: {
+inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 8,
+    paddingTop: 4,
+    paddingBottom: 4,
+    paddingHorizontal: 8,
     backgroundColor: '#f5f5f5',
+    marginBottom: 30, // This is a valid property in React Native
   },
   input: {
     flex: 1,
