@@ -1,0 +1,13 @@
+POST http://localhost:5000/api/attendance/geo-upload
+Content-Type: multipart/form-data; boundary=----MyBoundary
+
+------MyBoundary
+Content-Disposition: form-data; name="photo"; filename="image.jpg"
+Content-Type: image/jpeg
+
+< ./static/test/IMG_4363.jpg
+------MyBoundary
+Content-Disposition: form-data; name="counsellorId"
+
+6856a5cc401333fc4c29a810
+------MyBoundary--
