@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Image, Platform, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator } from "react-native";
+import { Image, Platform, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator, Modal, FlatList } from "react-native";
 
 const uiKeys = [
   "foundation",
@@ -35,6 +35,7 @@ export default function Index() {
   const [language, setLanguage] = useState<keyof typeof languageCodes>("English");
   const [translations, setTranslations] = useState(englishTexts);
   const [loading, setLoading] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
 
   useEffect(() => {
     if (language === "English") {
@@ -76,24 +77,51 @@ export default function Index() {
         {/* Inputs */}
         <TextInput placeholder={translations.username} placeholderTextColor="#ccc" style={styles.input} />
         <TextInput placeholder={translations.password} placeholderTextColor="#ccc" secureTextEntry style={styles.input} />
-        <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: 16 }}>
-          {Object.keys(languageCodes).map((lang) => (
-            <TouchableOpacity
-              key={lang}
-              style={{
-                backgroundColor: language === lang ? '#fff' : '#fff2',
-                borderRadius: 16,
-                paddingHorizontal: 12,
-                paddingVertical: 8,
-                marginHorizontal: 4,
-              }}
-              onPress={() => setLanguage(lang as keyof typeof languageCodes)}
-              disabled={loading}
-            >
-              <Text style={{ color: language === lang ? '#3a3a8a' : '#fff', fontWeight: 'bold' }}>{lang}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        {/* Language Dropdown */}
+        <TouchableOpacity
+          style={{
+            backgroundColor: '#fff2',
+            borderRadius: 24,
+            paddingHorizontal: 20,
+            height: 48,
+            justifyContent: 'center',
+            marginBottom: 16,
+            width: '100%',
+          }}
+          onPress={() => setModalVisible(true)}
+          disabled={loading}
+        >
+          <Text style={{ color: '#fff', fontSize: 16 }}>{language}</Text>
+        </TouchableOpacity>
+        <Modal
+          visible={modalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setModalVisible(false)}
+        >
+          <TouchableOpacity style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
+            <View style={styles.dropdownModal}>
+              {Object.keys(languageCodes).map((lang) => (
+                <TouchableOpacity
+                  key={lang}
+                  style={{
+                    paddingVertical: 12,
+                    paddingHorizontal: 20,
+                    backgroundColor: language === lang ? '#3a3a8a' : '#fff',
+                    borderRadius: 8,
+                    marginBottom: 4,
+                  }}
+                  onPress={() => {
+                    setLanguage(lang as keyof typeof languageCodes);
+                    setModalVisible(false);
+                  }}
+                >
+                  <Text style={{ color: language === lang ? '#fff' : '#3a3a8a', fontWeight: 'bold', fontSize: 16 }}>{lang}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </TouchableOpacity>
+        </Modal>
         {loading && <ActivityIndicator color="#fff" style={{ marginBottom: 16 }} />}
         {/* Login Button */}
         <TouchableOpacity style={styles.loginBtn} disabled={loading}>
@@ -202,5 +230,18 @@ const styles = StyleSheet.create({
     width: 120,
     height: 32,
     resizeMode: 'contain',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dropdownModal: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    minWidth: 200,
+    elevation: 5,
   },
 });
