@@ -1,111 +1,340 @@
 import React, { useState } from "react";
-import { 
-  FlatList, 
-  Image, 
-  SafeAreaView, 
-  ScrollView, 
-  StyleSheet, 
-  Text, 
-  TouchableOpacity, 
+import {
+  FlatList,
+  Image,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
   View,
   Dimensions,
   Platform,
-  StatusBar
+  StatusBar,
 } from "react-native";
+import { useRouter } from "expo-router";
 import Header from "../Header";
-import AppBar from '../Appbar';
+import AppBar from "../Appbar";
 import { useLanguage } from "../LanguageContext";
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
-const scale = (size: number) => (screenWidth / 320) * size;
-const verticalScale = (size: number) => (screenHeight / 568) * size;
-const moderateScale = (size: number, factor = 0.5) => size + (scale(size) - size) * factor;
-
-const getStatusBarHeight = () => {
-  return Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;
+// Scaling functions
+const scale = (size: number) => {
+  const baseWidth = 320;
+  const scaleFactor = screenWidth / baseWidth;
+  const maxScale = 1.5;
+  return size * Math.min(scaleFactor, maxScale);
 };
 
-const mothers = [
-  { id: '1', name: 'Asha Devi', img: 'https://randomuser.me/api/portraits/women/65.jpg' },
-  { id: '2', name: 'Sunita Kumari', img: 'https://randomuser.me/api/portraits/women/66.jpg' },
-  { id: '3', name: 'Meena Singh', img: 'https://randomuser.me/api/portraits/women/67.jpg' },
+const verticalScale = (size: number) => {
+  const baseHeight = 568;
+  const scaleFactor = screenHeight / baseHeight;
+  const maxScale = 1.4;
+  return size * Math.min(scaleFactor, maxScale);
+};
+
+const moderateScale = (size: number, factor = 0.5) => {
+  const scaledSize = scale(size);
+  return size + (scaledSize - size) * factor;
+};
+
+// Responsive dimensions
+const getResponsiveDimensions = () => {
+  const isTablet = screenWidth >= 768;
+  const isLargeScreen = screenWidth >= 1024;
+  return {
+    isTablet,
+    isLargeScreen,
+    containerPadding: isLargeScreen ? 24 : isTablet ? 20 : 16,
+    cardWidth: isLargeScreen ? 140 : isTablet ? 120 : 100,
+    cardMaxWidth: isLargeScreen ? 160 : isTablet ? 140 : 120,
+    avatarSize: isLargeScreen ? 70 : isTablet ? 64 : 56,
+    resourceImageSize: isLargeScreen ? 80 : isTablet ? 70 : 60,
+  };
+};
+
+const getStatusBarHeight = () => {
+  return Platform.OS === "android" ? StatusBar.currentHeight || 0 : 0;
+};
+
+const families = [
+  {
+    id: "1",
+    name: "family_1_name",
+    img: "https://images.unsplash.com/photo-1524502391471-f0101353c86d?auto=format&fit=crop&w=400&q=80",
+    mothers: ["1", "2"], // Mother IDs from mothers array
+  },
+  {
+    id: "2",
+    name: "family_2_name",
+    img: "https://images.unsplash.com/photo-1516321318423-6d56e749c5bc?auto=format&fit=crop&w=400&q=80",
+    mothers: ["3"],
+  },
 ];
 
 const history = [
-  { id: '4', name: 'Radha Patel', img: 'https://randomuser.me/api/portraits/women/68.jpg' },
-  { id: '5', name: 'Kavita Joshi', img: 'https://randomuser.me/api/portraits/women/69.jpg' },
+  {
+    id: "4",
+    name: "history_4_name",
+    img: "https://randomuser.me/api/portraits/women/68.jpg",
+  },
+  {
+    id: "5",
+    name: "history_5_name",
+    img: "https://randomuser.me/api/portraits/women/69.jpg",
+  },
 ];
 
 const resources = [
-  { id: '1', title: 'Nutrition for Mothers', desc: 'Learn about essential nutrition during pregnancy.', img: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80' },
-  { id: '2', title: 'Child Vaccination', desc: 'A guide to child vaccination schedules.', img: 'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=400&q=80' },
-  { id: '3', title: 'Mental Health', desc: 'Tips for maintaining mental health for mothers.', img: 'https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=400&q=80' },
+  {
+    id: "1",
+    title: "resource_1_title",
+    desc: "resource_1_desc",
+    img: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80",
+  },
+  {
+    id: "2",
+    title: "resource_2_title",
+    desc: "resource_2_desc",
+    img: "https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=400&q=80",
+  },
+  {
+    id: "3",
+    title: "resource_3_title",
+    desc: "resource_3_desc",
+    img: "https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=400&q=80",
+  },
 ];
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("home");
   const { translate } = useLanguage();
+  const responsive = getResponsiveDimensions();
+  const router = useRouter();
+
+  const dynamicStyles = StyleSheet.create({
+    profileCard: {
+      alignItems: "center",
+      marginRight: responsive.isLargeScreen
+        ? 20
+        : responsive.isTablet
+        ? 18
+        : 16,
+      backgroundColor: "#fff",
+      borderRadius: 12,
+      padding: responsive.isLargeScreen ? 16 : responsive.isTablet ? 14 : 12,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.08,
+      shadowRadius: 2,
+      elevation: 1,
+      minWidth: responsive.cardWidth,
+      maxWidth: responsive.cardMaxWidth,
+    },
+    avatar: {
+      width: responsive.avatarSize,
+      height: responsive.avatarSize,
+      borderRadius: responsive.avatarSize / 2,
+      marginBottom: 8,
+    },
+    resourceImg: {
+      width: responsive.resourceImageSize,
+      height: responsive.resourceImageSize,
+      borderRadius: 8,
+      marginRight: responsive.isLargeScreen
+        ? 16
+        : responsive.isTablet
+        ? 14
+        : 12,
+    },
+  });
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#3a3a8a" />
       <Header />
       <View style={styles.body}>
-        <ScrollView 
+        <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingHorizontal: responsive.containerPadding },
+          ]}
         >
-          {/* My Assigned Mothers */}
-          <Text style={styles.sectionTitle}>{translate('assignedMothers')}</Text>
+          {/* Assigned Families */}
+          <Text
+            style={[
+              styles.sectionTitle,
+              {
+                fontSize: responsive.isLargeScreen
+                  ? 22
+                  : responsive.isTablet
+                  ? 20
+                  : 18,
+              },
+            ]}
+          >
+            {translate("assignedFamilies")}
+          </Text>
           <FlatList
-            data={mothers}
+            data={families}
             horizontal
-            keyExtractor={item => item.id}
+            keyExtractor={(item) => item.id}
             showsHorizontalScrollIndicator={false}
             style={styles.horizontalList}
             contentContainerStyle={styles.horizontalListContent}
             renderItem={({ item }) => (
-              <TouchableOpacity style={styles.profileCard}>
-                <Image source={{ uri: item.img }} style={styles.avatar} />
-                <Text style={styles.profileName} numberOfLines={2}>
-                  {translate(`mother_${item.id}_name`)}
+              <TouchableOpacity
+                style={dynamicStyles.profileCard}
+                onPress={() =>
+                  router.push({
+                    pathname: "/Aww/MotherProfile",
+                    params: { familyId: item.id },
+                  })
+                }
+              >
+                <Image source={{ uri: item.img }} style={dynamicStyles.avatar} />
+                <Text
+                  style={[
+                    styles.profileName,
+                    {
+                      fontSize: responsive.isLargeScreen
+                        ? 17
+                        : responsive.isTablet
+                        ? 16
+                        : 15,
+                    },
+                  ]}
+                  numberOfLines={2}
+                >
+                  {translate(item.name)}
                 </Text>
               </TouchableOpacity>
             )}
           />
 
           {/* History */}
-          <Text style={styles.sectionTitle}>{translate('history')}</Text>
+          <Text
+            style={[
+              styles.sectionTitle,
+              {
+                fontSize: responsive.isLargeScreen
+                  ? 22
+                  : responsive.isTablet
+                  ? 20
+                  : 18,
+              },
+            ]}
+          >
+            {translate("history")}
+          </Text>
           <FlatList
             data={history}
             horizontal
-            keyExtractor={item => item.id}
+            keyExtractor={(item) => item.id}
             showsHorizontalScrollIndicator={false}
             style={styles.horizontalList}
             contentContainerStyle={styles.horizontalListContent}
             renderItem={({ item }) => (
-              <TouchableOpacity style={styles.profileCard}>
-                <Image source={{ uri: item.img }} style={styles.avatar} />
-                <Text style={styles.profileName} numberOfLines={2}>
-                  {translate(`history_${item.id}_name`)}
+              <TouchableOpacity
+                style={dynamicStyles.profileCard}
+                onPress={() =>
+                  router.push({
+                    pathname: "/Aww/MotherProfile",
+                    params: { name: translate(item.name) },
+                  })
+                }
+              >
+                <Image source={{ uri: item.img }} style={dynamicStyles.avatar} />
+                <Text
+                  style={[
+                    styles.profileName,
+                    {
+                      fontSize: responsive.isLargeScreen
+                        ? 17
+                        : responsive.isTablet
+                        ? 16
+                        : 15,
+                    },
+                  ]}
+                  numberOfLines={2}
+                >
+                  {translate(item.name)}
                 </Text>
               </TouchableOpacity>
             )}
           />
 
           {/* Resources */}
-          <Text style={styles.sectionTitle}>{translate('resources')}</Text>
+          <Text
+            style={[
+              styles.sectionTitle,
+              {
+                fontSize: responsive.isLargeScreen
+                  ? 22
+                  : responsive.isTablet
+                  ? 20
+                  : 18,
+              },
+            ]}
+          >
+            {translate("resources")}
+          </Text>
           <View style={styles.resourcesContainer}>
-            {resources.map(resource => (
-              <TouchableOpacity key={resource.id} style={styles.resourceCard}>
-                <Image source={{ uri: resource.img }} style={styles.resourceImg} />
+            {resources.map((resource) => (
+              <TouchableOpacity
+                key={resource.id}
+                style={[
+                  styles.resourceCard,
+                  {
+                    padding: responsive.isLargeScreen
+                      ? 16
+                      : responsive.isTablet
+                      ? 14
+                      : 12,
+                    minHeight: responsive.isLargeScreen
+                      ? 100
+                      : responsive.isTablet
+                      ? 90
+                      : 80,
+                  },
+                ]}
+              >
+                <Image
+                  source={{ uri: resource.img }}
+                  style={dynamicStyles.resourceImg}
+                />
                 <View style={styles.resourceContent}>
-                  <Text style={styles.resourceTitle} numberOfLines={2}>
-                    {translate(`resource_${resource.id}_title`)}
+                  <Text
+                    style={[
+                      styles.resourceTitle,
+                      {
+                        fontSize: responsive.isLargeScreen
+                          ? 18
+                          : responsive.isTablet
+                          ? 17
+                          : 16,
+                      },
+                    ]}
+                    numberOfLines={2}
+                  >
+                    {translate(resource.title)}
                   </Text>
-                  <Text style={styles.resourceDesc} numberOfLines={3}>
-                    {translate(`resource_${resource.id}_desc`)}
+                  <Text
+                    style={[
+                      styles.resourceDesc,
+                      {
+                        fontSize: responsive.isLargeScreen
+                          ? 15
+                          : responsive.isTablet
+                          ? 14.5
+                          : 14,
+                      },
+                    ]}
+                    numberOfLines={3}
+                  >
+                    {translate(resource.desc)}
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -121,95 +350,62 @@ export default function Home() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#3a3a8a',
+    backgroundColor: "#3a3a8a",
   },
   body: {
     flex: 1,
-    backgroundColor: '#f7f7fa',
+    backgroundColor: "#f7f7fa",
   },
   scrollContent: {
-    paddingHorizontal: moderateScale(16),
-    paddingTop: verticalScale(8),
+    paddingTop: 16,
     paddingBottom: verticalScale(80),
   },
   sectionTitle: {
-    fontSize: moderateScale(18),
-    fontWeight: 'bold',
-    color: '#3a3a8a',
-    marginBottom: verticalScale(8),
-    marginTop: verticalScale(12),
-    paddingHorizontal: scale(4),
+    fontWeight: "bold",
+    color: "#3a3a8a",
+    marginBottom: 8,
+    marginTop: 12,
+    paddingHorizontal: 4,
   },
   horizontalList: {
-    marginBottom: verticalScale(16),
+    marginBottom: 16,
   },
   horizontalListContent: {
-    paddingHorizontal: scale(4),
-  },
-  profileCard: {
-    alignItems: 'center',
-    marginRight: scale(16),
-    backgroundColor: '#fff',
-    borderRadius: moderateScale(12),
-    padding: moderateScale(12),
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
-    elevation: 1,
-    minWidth: scale(100),
-    maxWidth: scale(120),
-  },
-  avatar: {
-    width: moderateScale(56),
-    height: moderateScale(56),
-    borderRadius: moderateScale(28),
-    marginBottom: verticalScale(8),
+    paddingHorizontal: 4,
   },
   profileName: {
-    fontSize: moderateScale(15),
-    color: '#222',
-    fontWeight: '500',
-    textAlign: 'center',
-    lineHeight: moderateScale(18),
+    color: "#222",
+    fontWeight: "500",
+    textAlign: "center",
+    lineHeight: 18,
   },
   resourcesContainer: {
-    paddingHorizontal: scale(4),
+    paddingHorizontal: 4,
   },
   resourceCard: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderRadius: moderateScale(12),
-    marginBottom: verticalScale(14),
-    padding: moderateScale(12),
-    alignItems: 'center',
-    shadowColor: '#000',
+    flexDirection: "row",
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    marginBottom: 14,
+    alignItems: "center",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 2,
     elevation: 1,
-    minHeight: verticalScale(80),
-  },
-  resourceImg: {
-    width: moderateScale(60),
-    height: moderateScale(60),
-    borderRadius: moderateScale(8),
-    marginRight: scale(12),
   },
   resourceContent: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   resourceTitle: {
-    fontSize: moderateScale(16),
-    fontWeight: 'bold',
-    color: '#3a3a8a',
-    marginBottom: verticalScale(4),
-    lineHeight: moderateScale(20),
+    fontWeight: "bold",
+    color: "#3a3a8a",
+    marginBottom: 4,
+    lineHeight: 20,
   },
   resourceDesc: {
-    fontSize: moderateScale(14),
-    color: '#444',
-    lineHeight: moderateScale(18),
+    color: "#444",
+    lineHeight: 18,
   },
 });

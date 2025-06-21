@@ -11,6 +11,8 @@ export default function RootLayout() {
         <Stack.Screen name="index" options={{ title: "Main Page" }} />
         <Stack.Screen name="Aww/home" options={{ title: "Home Page" }} />
         <Stack.Screen name="Aww/video" options={{ title: "Video Page" }} />
+        <Stack.Screen name="Aww/profile" options={{ title: "Profile Page" }} />
+        <Stack.Screen name="Aww/MotherProfile" options={{ title: "Mother Profile Page" }} />
       </Stack>
     </LanguageProvider>
   );

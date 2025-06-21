@@ -1,23 +1,164 @@
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
-import { ActivityIndicator, Image, Modal, Platform, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import React, { useState, useEffect } from "react";
+import { ActivityIndicator, Image, Modal, Platform, Alert, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import Chatbot from "./chatbot";
 import { useLanguage } from "./LanguageContext";
+import { openDatabase, getDBConnection, createTable, getLanguagePreference, saveLanguagePreference } from "./db";
+
+// Database initialization
+const DB_NAME = "LanguageDB";
+const STORE_NAME = "LanguageStore";
+
+const initializeDB = async () => {
+  try {
+    const db = await openDatabase(DB_NAME, STORE_NAME);
+    await createTable(db, STORE_NAME);
+    return db;
+  } catch (error) {
+    console.error("Failed to initialize database:", error);
+    return null;
+  }
+};
+
+// Database helper functions
+const db = {
+  async getPreference(): Promise<string | null> {
+    const connection = await getDBConnection(DB_NAME, STORE_NAME);
+    if (!connection) return null;
+    return await getLanguagePreference(connection, STORE_NAME);
+  },
+  async savePreference(language: string): Promise<void> {
+    const connection = await getDBConnection(DB_NAME, STORE_NAME);
+    if (!connection) return;
+    await saveLanguagePreference(connection, STORE_NAME, language);
+  }
+};
 
 export default function Index() {
   const router = useRouter();
   const { language, setLanguage, translate, loading } = useLanguage();
   const [modalVisible, setModalVisible] = useState(false);
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isDBReady, setIsDBReady] = useState(false);
 
-  const handleLogin = () => {
-    if (!username || !password) {
-      alert("Please enter both username and password.");
+  // Initialize database and load saved language preference
+  useEffect(() => {
+    const setupDB = async () => {
+      await initializeDB();
+      setIsDBReady(true);
+      
+      // Load saved language preference
+      const savedLang = await db.getPreference();
+      if (savedLang && languageCodes[savedLang as keyof typeof languageCodes]) {
+        setLanguage(savedLang as keyof typeof languageCodes);
+      }
+    };
+    setupDB();
+  }, [setLanguage]);
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert("Validation Error", "Please enter both email and password.");
       return;
     }
-    router.push("./Aww/home");
+
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/counsellor/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.token) {
+        // Save language preference to IndexedDB
+        await db.savePreference(language);
+        
+        console.log("Login successful:", data);
+
+        // Set cookie to expire in 1 hour
+        const expires = new Date(Date.now() + 60 * 60 * 1000).toUTCString();
+        document.cookie = `authToken=${data.token}; expires=${expires}; path=/;`;
+
+        router.push("./Aww/home");
+      } else {
+        Alert.alert("Login Failed", data.message || "Invalid credentials. Please try again.");
+      }
+    } catch (err) {
+      // If offline, use saved language preference
+      const savedLang = await db.getPreference();
+      if (savedLang) {
+        setLanguage(savedLang as keyof typeof languageCodes);
+      }
+      Alert.alert("Network Error", "Unable to connect. Please check your internet connection and try again.");
+    }
   };
+
+  // Database helper functions
+  const openDatabase = (dbName: string, storeName: string): Promise<IDBDatabase> => {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(dbName, 1);
+      
+      request.onupgradeneeded = () => {
+        const db = request.result;
+        if (!db.objectStoreNames.contains(storeName)) {
+          db.createObjectStore(storeName, { keyPath: 'id' });
+        }
+      };
+
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+  };
+
+  const createTable = (db: IDBDatabase, storeName: string): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([storeName], 'readwrite');
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
+    });
+  };
+
+  const getDBConnection = async (dbName: string, storeName: string): Promise<IDBDatabase | null> => {
+    try {
+      return await openDatabase(dbName, storeName);
+    } catch (error) {
+      console.error('Failed to get DB connection:', error);
+      return null;
+    }
+  };
+
+  const getLanguagePreference = (db: IDBDatabase, storeName: string): Promise<string | null> => {
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([storeName], 'readonly');
+      const store = transaction.objectStore(storeName);
+      const request = store.get('language');
+
+      request.onsuccess = () => resolve(request.result?.value || null);
+      request.onerror = () => reject(request.error);
+    });
+  };
+
+  const saveLanguagePreference = (db: IDBDatabase, storeName: string, language: string): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([storeName], 'readwrite');
+      const store = transaction.objectStore(storeName);
+      const request = store.put({ id: 'language', value: language });
+
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+  };
+
+  if (!isDBReady) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#3a3a8a" />
+      </View>
+    );
+  }
 
   return (
     <View style={{ flex: 1, position: "relative" }}>
@@ -28,11 +169,11 @@ export default function Index() {
           <Text style={styles.title2}>{translate('motherChild')}</Text>
           <Text style={styles.title3}>{translate('india')}</Text>
           <TextInput
-            placeholder={translate('username')}
+            placeholder={translate('email')}
             placeholderTextColor="#ccc"
             style={styles.input}
-            value={username}
-            onChangeText={setUsername}
+            value={email}
+            onChangeText={setEmail}
           />
           <TextInput
             placeholder={translate('password')}
