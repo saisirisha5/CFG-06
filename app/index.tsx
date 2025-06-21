@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Image, Platform, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Image, Picker, Platform, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 export default function Index() {
   const [language, setLanguage] = useState("English");
@@ -16,13 +16,19 @@ export default function Index() {
         {/* Inputs */}
         <TextInput placeholder="Username" placeholderTextColor="#ccc" style={styles.input} />
         <TextInput placeholder="password" placeholderTextColor="#ccc" secureTextEntry style={styles.input} />
-        <TextInput
-          placeholder="English"
-          placeholderTextColor="#ccc"
-          style={styles.input}
-          value={language}
-          onChangeText={setLanguage}
-        />
+        <View style={styles.pickerWrapper}>
+          <Picker
+            selectedValue={language}
+            style={styles.picker}
+            onValueChange={(itemValue) => setLanguage(itemValue)}
+            dropdownIconColor="#fff"
+          >
+            <Picker.Item label="English" value="English" color="#222" />
+            <Picker.Item label="Hindi" value="Hindi" color="#222" />
+            <Picker.Item label="Marathi" value="Marathi" color="#222" />
+            <Picker.Item label="Gujarati" value="Gujarati" color="#222" />
+          </Picker>
+        </View>
 
         {/* Login Button */}
         <TouchableOpacity style={styles.loginBtn}>
@@ -90,6 +96,24 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     marginBottom: 16,
+  },
+  pickerWrapper: {
+    width: "100%",
+    height: 48,
+    backgroundColor: "#fff2",
+    borderRadius: 24,
+    marginBottom: 16,
+    justifyContent: 'center',
+  },
+  picker: {
+    color: '#fff',
+    backgroundColor: '#fff2',
+    borderRadius: 24,
+    width: '100%',
+    height: 48,
+    marginLeft: 0,
+    paddingHorizontal: 20,
+    fontSize: 16,
   },
   loginBtn: {
     width: "100%",
