@@ -4,6 +4,7 @@ const dbconnection = require('./db/connection');
 const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 5000;
+const authRoutes = require('./routes/authRoutes');
 
 app.use(express.json());
 
@@ -13,6 +14,7 @@ app.get('/', (req, res) => {
 });
 
 // TODO: Add routes and middleware
+app.use('/api', authRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is up and running at http://localhost:${PORT} 🚀`);
