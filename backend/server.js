@@ -1,4 +1,5 @@
 // Entry point of the backend server
+
 require('dotenv').config();
 const dbconnection = require('./db/connection');
 const express = require('express');
@@ -7,7 +8,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const authRoutes = require('./routes/authRoutes');
 const sessionRoutes = require('./routes/sessionRoutes');
-
+const path = require('path')
 const householdRoutes = require('./routes/householdRoutes');
 const surveyRoutes = require('./routes/surveyRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
