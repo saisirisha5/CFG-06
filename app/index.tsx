@@ -28,8 +28,14 @@ const languageCodes = {
   Hindi: "hi",
   Marathi: "mr",
   Gujarati: "gu",
-  Telugu: "te"
+  Telugu: "te",
+  Bengali: "bn",
+  Tamil: "ta",
+  Punjabi: "pa",
+  Kannada: "kn",
+  Malayalam: "ml"
 };
+
 
 export default function Index() {
   const [language, setLanguage] = useState<keyof typeof languageCodes>("English");
