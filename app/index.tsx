@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Image, Picker, Platform, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator } from "react-native";
+import { Image, Platform, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator } from "react-native";
 
 const uiKeys = [
   "foundation",
@@ -76,19 +76,23 @@ export default function Index() {
         {/* Inputs */}
         <TextInput placeholder={translations.username} placeholderTextColor="#ccc" style={styles.input} />
         <TextInput placeholder={translations.password} placeholderTextColor="#ccc" secureTextEntry style={styles.input} />
-        <View style={styles.pickerWrapper}>
-          <Picker
-            selectedValue={language}
-            style={styles.picker}
-            onValueChange={(itemValue: keyof typeof languageCodes) => setLanguage(itemValue)}
-            dropdownIconColor="#fff"
-          >
-            <Picker.Item label="English" value="English" color="#222" />
-            <Picker.Item label="Hindi" value="Hindi" color="#222" />
-            <Picker.Item label="Marathi" value="Marathi" color="#222" />
-            <Picker.Item label="Gujarati" value="Gujarati" color="#222" />
-            <Picker.Item label="Telugu" value="Telugu" color="#222" />
-          </Picker>
+        <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: 16 }}>
+          {Object.keys(languageCodes).map((lang) => (
+            <TouchableOpacity
+              key={lang}
+              style={{
+                backgroundColor: language === lang ? '#fff' : '#fff2',
+                borderRadius: 16,
+                paddingHorizontal: 12,
+                paddingVertical: 8,
+                marginHorizontal: 4,
+              }}
+              onPress={() => setLanguage(lang as keyof typeof languageCodes)}
+              disabled={loading}
+            >
+              <Text style={{ color: language === lang ? '#3a3a8a' : '#fff', fontWeight: 'bold' }}>{lang}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
         {loading && <ActivityIndicator color="#fff" style={{ marginBottom: 16 }} />}
         {/* Login Button */}
@@ -157,24 +161,6 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     marginBottom: 16,
-  },
-  pickerWrapper: {
-    width: "100%",
-    height: 48,
-    backgroundColor: "#fff2",
-    borderRadius: 24,
-    marginBottom: 16,
-    justifyContent: 'center',
-  },
-  picker: {
-    color: '#fff',
-    backgroundColor: '#fff2',
-    borderRadius: 24,
-    width: '100%',
-    height: 48,
-    marginLeft: 0,
-    paddingHorizontal: 20,
-    fontSize: 16,
   },
   loginBtn: {
     width: "100%",
