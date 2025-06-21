@@ -10,12 +10,6 @@ const regionalDataSchema = new mongoose.Schema({
   languageTechAccess: { type: String, required: true },
 });
 
-const questionSchema = new mongoose.Schema({
-    questionText: { type: String, required: true },
-    questionType: { type: String, enum: ['MCQ', 'YesNo', 'Rating'], required: true },
-    options: [{ type: String }] // Only for MCQ
-});
-
 const counsellingSessionSchema = new mongoose.Schema({
   name: { type: String, required: true },
   address: { type: String, required: true },

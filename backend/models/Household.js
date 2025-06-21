@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const memberSchema = new mongoose.Schema({
   name: { type: String, required: true },
+  profilePhoto: { type: String, required: false},
   age: { type: Number, required: true },
   gender: { type: String, enum: ['Male', 'Female', 'Other'], required: true },
 }, { _id: true }); // Ensure members get their own _id
