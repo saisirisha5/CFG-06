@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import React from "react";
 import { FlatList, Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
@@ -17,6 +18,7 @@ const resources = [
 ];
 
 export default function Home() {
+  const router = useRouter();
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#3a3a8a' }}>
       {/* Header */}
@@ -34,10 +36,10 @@ export default function Home() {
             showsHorizontalScrollIndicator={false}
             style={{ marginBottom: 16 }}
             renderItem={({ item }) => (
-              <View style={styles.profileCard}>
+              <TouchableOpacity style={styles.profileCard} onPress={() => router.push("/Aww/MotherProfile")}>
                 <Image source={{ uri: item.img }} style={styles.avatar} />
                 <Text style={styles.profileName}>{item.name}</Text>
-              </View>
+              </TouchableOpacity>
             )}
           />
           {/* History */}
@@ -49,10 +51,10 @@ export default function Home() {
             showsHorizontalScrollIndicator={false}
             style={{ marginBottom: 16 }}
             renderItem={({ item }) => (
-              <View style={styles.profileCard}>
+              <TouchableOpacity style={styles.profileCard} onPress={() => router.push("/Aww/MotherProfile")}>
                 <Image source={{ uri: item.img }} style={styles.avatar} />
                 <Text style={styles.profileName}>{item.name}</Text>
-              </View>
+              </TouchableOpacity>
             )}
           />
           {/* Resources */}
