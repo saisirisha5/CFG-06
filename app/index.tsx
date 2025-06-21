@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Image, Modal, Platform, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import Chatbot from "./chatbot";
@@ -37,12 +38,14 @@ const languageCodes = {
   Malayalam: "ml"
 };
 
-
 export default function Index() {
+  const router = useRouter();
   const [language, setLanguage] = useState<keyof typeof languageCodes>("English");
   const [translations, setTranslations] = useState(englishTexts);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
 
   useEffect(() => {
     if (language === "English") {
@@ -52,28 +55,37 @@ export default function Index() {
     }
     setLoading(true);
     const fetchTranslations = async () => {
-  const newTranslations: Partial<typeof englishTexts> = {};
-  for (const key of uiKeys as (keyof typeof englishTexts)[]) {
-    try {
-      const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(englishTexts[key])}&langpair=en|${languageCodes[language]}`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-      const data = await res.json();
-      newTranslations[key] = data.responseData.translatedText || englishTexts[key];
-    } catch (error) {
-      console.error(`Translation failed for ${key}:`, error);
-      newTranslations[key] = englishTexts[key];
-    }
-  }
-  setTranslations(newTranslations as typeof englishTexts);
-  setLoading(false);
-};
+      const newTranslations: Partial<typeof englishTexts> = {};
+      for (const key of uiKeys as (keyof typeof englishTexts)[]) {
+        try {
+          const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(englishTexts[key])}&langpair=en|${languageCodes[language]}`;
+          const res = await fetch(url);
+          if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+          const data = await res.json();
+          newTranslations[key] = data.responseData.translatedText || englishTexts[key];
+        } catch (error) {
+          console.error(`Translation failed for ${key}:`, error);
+          newTranslations[key] = englishTexts[key];
+        }
+      }
+      setTranslations(newTranslations as typeof englishTexts);
+      setLoading(false);
+    };
     fetchTranslations();
   }, [language]);
 
+  const handleLogin = () => {
+    if (!username || !password) {
+      alert("Please enter both username and password.");
+      return;
+    }
+    // Optionally add authentication logic here
+    router.push("/Aww/home");
+  };
+
   return (
-    <View style={{ flex: 1, position: 'relative' }}>
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#3a3a8a' }}>
+    <View style={{ flex: 1, position: "relative" }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#3a3a8a" }}>
         <View style={styles.container}>
           {/* Logo */}
           <Image source={require("../assets/images/logo.png")} style={styles.logo} />
@@ -83,23 +95,36 @@ export default function Index() {
           <Text style={styles.title3}>{translations.india}</Text>
 
           {/* Inputs */}
-          <TextInput placeholder={translations.username} placeholderTextColor="#ccc" style={styles.input} />
-          <TextInput placeholder={translations.password} placeholderTextColor="#ccc" secureTextEntry style={styles.input} />
+          <TextInput
+            placeholder={translations.username}
+            placeholderTextColor="#ccc"
+            style={styles.input}
+            value={username}
+            onChangeText={setUsername}
+          />
+          <TextInput
+            placeholder={translations.password}
+            placeholderTextColor="#ccc"
+            secureTextEntry
+            style={styles.input}
+            value={password}
+            onChangeText={setPassword}
+          />
           {/* Language Dropdown */}
           <TouchableOpacity
             style={{
-              backgroundColor: '#fff2',
+              backgroundColor: "#fff2",
               borderRadius: 24,
               paddingHorizontal: 20,
               height: 48,
-              justifyContent: 'center',
+              justifyContent: "center",
               marginBottom: 16,
-              width: '100%',
+              width: "100%",
             }}
             onPress={() => setModalVisible(true)}
             disabled={loading}
           >
-            <Text style={{ color: '#fff', fontSize: 16 }}>{language}</Text>
+            <Text style={{ color: "#fff", fontSize: 16 }}>{language}</Text>
           </TouchableOpacity>
           <Modal
             visible={modalVisible}
@@ -115,7 +140,7 @@ export default function Index() {
                     style={{
                       paddingVertical: 12,
                       paddingHorizontal: 20,
-                      backgroundColor: language === lang ? '#3a3a8a' : '#fff',
+                      backgroundColor: language === lang ? "#3a3a8a" : "#fff",
                       borderRadius: 8,
                       marginBottom: 4,
                     }}
@@ -124,7 +149,11 @@ export default function Index() {
                       setModalVisible(false);
                     }}
                   >
-                    <Text style={{ color: language === lang ? '#fff' : '#3a3a8a', fontWeight: 'bold', fontSize: 16 }}>{lang}</Text>
+                    <Text
+                      style={{ color: language === lang ? "#fff" : "#3a3a8a", fontWeight: "bold", fontSize: 16 }}
+                    >
+                      {lang}
+                    </Text>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -132,7 +161,7 @@ export default function Index() {
           </Modal>
           {loading && <ActivityIndicator color="#fff" style={{ marginBottom: 16 }} />}
           {/* Login Button */}
-          <TouchableOpacity style={styles.loginBtn} disabled={loading}>
+          <TouchableOpacity style={styles.loginBtn} disabled={loading} onPress={handleLogin}>
             <Text style={styles.loginText}>{translations.login}</Text>
           </TouchableOpacity>
 
@@ -164,7 +193,7 @@ const styles = StyleSheet.create({
     height: 110,
     resizeMode: "contain",
     marginBottom: 16,
-    marginTop: Platform.OS === 'android' ? 40 : 0,
+    marginTop: Platform.OS === "android" ? 40 : 0,
   },
   title1: {
     color: "#fff",
@@ -180,7 +209,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     marginBottom: 0,
     marginTop: 2,
-    textAlign: 'center',
+    textAlign: "center",
   },
   title3: {
     color: "#fff",
@@ -208,7 +237,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 16,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
@@ -224,31 +253,31 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     marginTop: 8,
-    textAlign: 'center',
-    textDecorationLine: 'none',
+    textAlign: "center",
+    textDecorationLine: "none",
   },
   supportedByContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 16,
   },
   supportedByText: {
-    color: '#bbb',
+    color: "#bbb",
     fontSize: 14,
     marginBottom: 4,
   },
   koitaLogo: {
     width: 120,
     height: 32,
-    resizeMode: 'contain',
+    resizeMode: "contain",
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0,0,0,0.3)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   dropdownModal: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 12,
     padding: 16,
     minWidth: 200,
