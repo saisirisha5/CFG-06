@@ -15,21 +15,30 @@ import {
 import { WebView } from 'react-native-webview';
 import Header from '../Header';
 import Appbar from '../Appbar';
+import { useLanguage } from '../LanguageContext';
 
-// Get screen dimensions
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-// Responsive scaling functions
-const scale = (size) => (screenWidth / 320) * size;
-const verticalScale = (size) => (screenHeight / 568) * size;
-const moderateScale = (size, factor = 0.5) => size + (scale(size) - size) * factor;
+const scale = (size: number) => (screenWidth / 320) * size;
+const verticalScale = (size: number) => (screenHeight / 568) * size;
+const moderateScale = (size: number, factor = 0.5) => size + (scale(size) - size) * factor;
 
-// Sample video data - Health and maternal care focused
-const videoData = [
+interface VideoItem {
+  id: string;
+  title: string;
+  videoId: string;
+  duration: string;
+  views: string;
+  uploadTime: string;
+  channel: string;
+  description: string;
+}
+
+const videoData: VideoItem[] = [
   {
     id: '1',
     title: 'Pregnancy Nutrition: Essential Foods for a Healthy Baby',
-    videoId: 'dQw4w9WgXcQ', // Replace with actual YouTube video IDs
+    videoId: 'dQw4w9WgXcQ',
     duration: '12:34',
     views: '2.3M',
     uploadTime: '2 days ago',
@@ -228,13 +237,14 @@ const videoData = [
   },
 ];
 
-const video = () => {
+const Video: React.FC = () => {
   const [activeTab, setActiveTab] = useState("video");
-  const [currentPlayingId, setCurrentPlayingId] = useState(null);
-  const [loadingVideos, setLoadingVideos] = useState({});
-  const flatListRef = useRef(null);
+  const [currentPlayingId, setCurrentPlayingId] = useState<string | null>(null);
+  const [loadingVideos, setLoadingVideos] = useState<Record<string, boolean>>({});
+  const flatListRef = useRef<FlatList<VideoItem>>(null);
+  const { translate } = useLanguage();
 
-  const handleVideoPress = useCallback((videoId) => {
+  const handleVideoPress = useCallback((videoId: string) => {
     if (currentPlayingId === videoId) {
       setCurrentPlayingId(null);
     } else {
@@ -242,26 +252,25 @@ const video = () => {
     }
   }, [currentPlayingId]);
 
-  const handleWebViewLoad = useCallback((videoId) => {
+  const handleWebViewLoad = useCallback((videoId: string) => {
     setLoadingVideos(prev => ({ ...prev, [videoId]: false }));
   }, []);
 
-  const handleWebViewLoadStart = useCallback((videoId) => {
+  const handleWebViewLoadStart = useCallback((videoId: string) => {
     setLoadingVideos(prev => ({ ...prev, [videoId]: true }));
   }, []);
 
-  const handleWebViewError = useCallback((videoId) => {
+  const handleWebViewError = useCallback((videoId: string) => {
     setLoadingVideos(prev => ({ ...prev, [videoId]: false }));
     Alert.alert('Error', 'Failed to load video. Please check your internet connection.');
   }, []);
 
-  const renderVideoItem = useCallback(({ item, index }) => {
+  const renderVideoItem = useCallback(({ item, index }: { item: VideoItem; index: number }) => {
     const isPlaying = currentPlayingId === item.id;
     const isLoading = loadingVideos[item.id];
 
     return (
       <View style={styles.videoContainer}>
-        {/* Video Player Container */}
         <View style={styles.videoPlayerContainer}>
           {isPlaying ? (
             <View style={styles.webViewContainer}>
@@ -304,11 +313,9 @@ const video = () => {
             </TouchableOpacity>
           )}
         </View>
-
-        {/* Video Info */}
         <View style={styles.videoInfo}>
           <Text style={styles.videoTitle} numberOfLines={2}>
-            {item.title}
+            {translate(`video_${item.id}_title`)}
           </Text>
           <View style={styles.videoMeta}>
             <Text style={styles.channelName}>{item.channel}</Text>
@@ -319,11 +326,9 @@ const video = () => {
             </View>
           </View>
           <Text style={styles.videoDescription} numberOfLines={2}>
-            {item.description}
+            {translate(`video_${item.id}_desc`)}
           </Text>
         </View>
-
-        {/* Action Buttons */}
         <View style={styles.actionButtons}>
           <TouchableOpacity style={styles.actionButton}>
             <Text style={styles.actionButtonText}>👍</Text>
@@ -340,11 +345,11 @@ const video = () => {
         </View>
       </View>
     );
-  }, [currentPlayingId, loadingVideos, handleVideoPress, handleWebViewLoad, handleWebViewLoadStart, handleWebViewError]);
+  }, [currentPlayingId, loadingVideos, handleVideoPress, handleWebViewLoad, handleWebViewLoadStart, handleWebViewError, translate]);
 
-  const keyExtractor = useCallback((item) => item.id, []);
+  const keyExtractor = useCallback((item: VideoItem) => item.id, []);
 
-  const getItemLayout = useCallback((data, index) => ({
+  const getItemLayout = useCallback((data: VideoItem[] | null | undefined, index: number) => ({
     length: verticalScale(420),
     offset: verticalScale(420) * index,
     index,
@@ -368,7 +373,6 @@ const video = () => {
           getItemLayout={getItemLayout}
           contentContainerStyle={styles.listContent}
           onScrollBeginDrag={() => {
-            // Pause video when user starts scrolling
             if (currentPlayingId) {
               setCurrentPlayingId(null);
             }
@@ -539,4 +543,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default video;
+export default Video;

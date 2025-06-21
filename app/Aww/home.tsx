@@ -14,16 +14,14 @@ import {
 } from "react-native";
 import Header from "../Header";
 import AppBar from '../Appbar';
+import { useLanguage } from "../LanguageContext";
 
-// Get screen dimensions
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-// Define responsive scaling functions
 const scale = (size: number) => (screenWidth / 320) * size;
 const verticalScale = (size: number) => (screenHeight / 568) * size;
 const moderateScale = (size: number, factor = 0.5) => size + (scale(size) - size) * factor;
 
-// Get status bar height for Android
 const getStatusBarHeight = () => {
   return Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;
 };
@@ -47,6 +45,7 @@ const resources = [
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("home");
+  const { translate } = useLanguage();
 
   return (
     <SafeAreaView style={styles.container}>
@@ -58,7 +57,7 @@ export default function Home() {
           contentContainerStyle={styles.scrollContent}
         >
           {/* My Assigned Mothers */}
-          <Text style={styles.sectionTitle}>My Assigned Mothers</Text>
+          <Text style={styles.sectionTitle}>{translate('assignedMothers')}</Text>
           <FlatList
             data={mothers}
             horizontal
@@ -70,14 +69,14 @@ export default function Home() {
               <TouchableOpacity style={styles.profileCard}>
                 <Image source={{ uri: item.img }} style={styles.avatar} />
                 <Text style={styles.profileName} numberOfLines={2}>
-                  {item.name}
+                  {translate(`mother_${item.id}_name`)}
                 </Text>
               </TouchableOpacity>
             )}
           />
 
           {/* History */}
-          <Text style={styles.sectionTitle}>History</Text>
+          <Text style={styles.sectionTitle}>{translate('history')}</Text>
           <FlatList
             data={history}
             horizontal
@@ -89,24 +88,24 @@ export default function Home() {
               <TouchableOpacity style={styles.profileCard}>
                 <Image source={{ uri: item.img }} style={styles.avatar} />
                 <Text style={styles.profileName} numberOfLines={2}>
-                  {item.name}
+                  {translate(`history_${item.id}_name`)}
                 </Text>
               </TouchableOpacity>
             )}
           />
 
           {/* Resources */}
-          <Text style={styles.sectionTitle}>Resources</Text>
+          <Text style={styles.sectionTitle}>{translate('resources')}</Text>
           <View style={styles.resourcesContainer}>
             {resources.map(resource => (
               <TouchableOpacity key={resource.id} style={styles.resourceCard}>
                 <Image source={{ uri: resource.img }} style={styles.resourceImg} />
                 <View style={styles.resourceContent}>
                   <Text style={styles.resourceTitle} numberOfLines={2}>
-                    {resource.title}
+                    {translate(`resource_${resource.id}_title`)}
                   </Text>
                   <Text style={styles.resourceDesc} numberOfLines={3}>
-                    {resource.desc}
+                    {translate(`resource_${resource.id}_desc`)}
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -131,7 +130,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: moderateScale(16),
     paddingTop: verticalScale(8),
-    paddingBottom: verticalScale(80), // Extra padding for app bar
+    paddingBottom: verticalScale(80),
   },
   sectionTitle: {
     fontSize: moderateScale(18),
