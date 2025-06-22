@@ -18,7 +18,6 @@ import {
     Shield,
     TrendingUp
 } from "lucide-react";
-import { format } from "date-fns";
 
 const FamilyReportPage = () => {
     const { householdId } = useParams();
