@@ -1,17 +1,31 @@
-import { Route, Routes } from "react-router-dom";
-import AuthPage from "./pages/Auth/AuthPage";
-import CounsellorRegisterPage from "./pages/Auth/CounsellorRegisterPage";
-import AdminLayout from "./layouts/AdminLayout";
-import DashboardPage from "./pages/Auth/DashboardPage";
-
+import React from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import AdminPanel from './components/AdminPanel';
+import CounsellingSessionForm from './components/CounsellingSessionForm';
+import SessionList from './components/SessionList';
+import AnalyticsDashboard from './components/AnalyticsDashboard';
+import AttendancePage from './pages/AttendancePage';
+import AttendanceDemo from './components/AttendanceDemo';
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<AuthPage />} />
-      <Route path="/counsellor/register" element={<CounsellorRegisterPage />} />
+
+      {/* Redirect root to admin panel */}
+      <Route path="/" element={<Navigate to="/admin" replace />} />
       
-      {/* Dashboard and other admin routes go here, wrapped by the layout */}
-      <Route path="/dashboard" element={<AdminLayout><DashboardPage /></AdminLayout>} />
+      {/* Admin Panel Routes */}
+      <Route path="/admin" element={<AdminPanel />}>
+        <Route index element={<Navigate to="create-session" replace />} />
+        <Route path="create-session" element={<CounsellingSessionForm />} />
+        <Route path="sessions" element={<SessionList />} />
+        <Route path="analytics" element={<AnalyticsDashboard />} />
+      </Route>
+        {/* Attendance Routes */}
+        <Route path="/attendance" element={<AttendancePage />} />
+      <Route path="/attendance/demo" element={<AttendanceDemo />} />
+      
+      {/* Catch all route */}
+      <Route path="*" element={<Navigate to="/admin" replace />} />
     </Routes>
   );
 }

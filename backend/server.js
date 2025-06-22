@@ -43,7 +43,7 @@ app.use('/api/sessions', sessionRoutes);
 app.use('/api/households', householdRoutes);
 app.use('/api/surveys', surveyRoutes);
 app.use('/api/analytics', analyticsRoutes);
-app.use('/api/attendance', attendanceRoutes);
+app.use('/api/counsellor/attendance', attendanceRoutes);
 app.use('/static/images', express.static(path.join(__dirname, 'static/images')));
 
 

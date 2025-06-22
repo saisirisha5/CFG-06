@@ -64,3 +64,38 @@ exports.uploadGeoTaggedAttendance = async (req, res) => {
     res.status(500).json({ message: 'Server error during geo-tag attendance' });
   }
 };
+
+exports.getAllAttendances = async (req, res) => {
+  try {
+    const attendances = await Attendance.find()
+      .sort({ timeIn: -1 }) // Most recent first
+      .limit(100); // Limit to prevent overwhelming response
+
+    res.status(200).json({
+      message: 'Attendances retrieved successfully',
+      attendances
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error while fetching attendances' });
+  }
+};
+
+exports.getAttendancesByCounsellor = async (req, res) => {
+  try {
+    const { counsellorId } = req.params;
+    
+    const attendances = await Attendance.find({ counsellorId })
+      .sort({ timeIn: -1 });
+
+    res.status(200).json({
+      message: 'Attendances retrieved successfully',
+      attendances
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error while fetching attendances' });
+  }
+};
