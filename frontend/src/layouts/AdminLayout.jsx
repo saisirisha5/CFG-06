@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link, Outlet } from 'react-router-dom';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Home, Users, BarChart3, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Home, Users, BarChart3, Settings, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import React from 'react';
 
 const AdminLayout = () => {
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -12,8 +13,8 @@ const AdminLayout = () => {
 
     return (
         <TooltipProvider>
-            <div className="flex min-h-screen w-full bg-muted/40">
-                <aside className={`flex flex-col border-r bg-background transition-all duration-300 ease-in-out ${isSidebarCollapsed ? 'w-16' : 'w-64'}`}>
+            <div className="flex min-h-screen w-full overflow-hidden">
+                <aside className={`flex flex-col border-r bg-background transition-all duration-300 ease-in-out flex-shrink-0 ${isSidebarCollapsed ? 'w-16' : 'w-64'}`}>
                     <div className="flex h-16 items-center border-b px-4 lg:px-6 justify-between">
                         {!isSidebarCollapsed && (
                             <Link to="/" className="flex items-center gap-2 font-semibold">
@@ -27,6 +28,7 @@ const AdminLayout = () => {
                     <nav className="flex-1 overflow-y-auto py-4">
                         <ul className="space-y-2">
                             <li><NavItem icon={Home} label="Dashboard" to="/dashboard" isCollapsed={isSidebarCollapsed} /></li>
+                            <li><NavItem icon={Plus} label="Sessions" to="/admin/sessions" isCollapsed={isSidebarCollapsed} /></li>
                             <li><NavItem icon={Users} label="Counsellors" to="/counsellors" isCollapsed={isSidebarCollapsed} /></li>
                             <li><NavItem icon={BarChart3} label="Analytics" to="/analytics" isCollapsed={isSidebarCollapsed} /></li>
                         </ul>
@@ -36,14 +38,14 @@ const AdminLayout = () => {
                     </div>
                 </aside>
 
-                <div className="flex flex-col flex-1">
+                <div className="flex flex-col flex-1 min-w-0">
                     <header className="flex h-16 items-center gap-4 border-b bg-background px-4 lg:px-6">
                         {/* Header content can go here, e.g., user menu, search bar */}
                         <div className="w-full flex-1">
                             <h1 className="text-lg font-semibold">Dashboard</h1>
                         </div>
                     </header>
-                    <main className="flex-1 p-4 lg:p-6">
+                    <main className="flex-1 p-4 lg:p-6 overflow-auto">
                         <Outlet />
                     </main>
                 </div>
@@ -52,10 +54,10 @@ const AdminLayout = () => {
     );
 };
 
-const NavItem = ({ icon: Icon, label, to, isCollapsed }) => {
+const NavItem = ({ icon, label, to, isCollapsed }) => {
     const content = (
         <Link to={to} className="flex items-center gap-4 rounded-lg px-4 py-2 text-muted-foreground transition-colors hover:text-foreground">
-            <Icon className="h-5 w-5" />
+            {React.createElement(icon, { className: "h-5 w-5" })}
             {!isCollapsed && <span className="truncate">{label}</span>}
         </Link>
     );

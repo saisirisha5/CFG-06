@@ -200,9 +200,92 @@ const respondToSession = async (req, res) => {
     }
 };
 
+// @desc    Get all sessions with questionnaires for admin
+// @route   GET /api/sessions/admin/all
+// @access  Private/Admin
+const getAllSessionsForAdmin = async (req, res) => {
+  try {
+    // Fetch all sessions with populated counsellor and admin info
+    const sessions = await CounsellingSession.find()
+      .populate('assignedCounsellor', 'name email phone')
+      .populate('createdBy', 'name email')
+      .sort({ createdAt: -1 }); // Most recent first
+
+    // Fetch questionnaires for all sessions
+    const sessionIds = sessions.map(session => session._id);
+    const questionnaires = await Questionnaire.find({ 
+      session: { $in: sessionIds } 
+    });
+
+    // Create a map of session ID to questionnaire
+    const questionnaireMap = {};
+    questionnaires.forEach(q => {
+      questionnaireMap[q.session.toString()] = q.questions;
+    });
+
+    // Combine sessions with their questionnaires
+    const sessionsWithQuestionnaires = sessions.map(session => ({
+      ...session.toObject(),
+      questions: questionnaireMap[session._id.toString()] || []
+    }));
+
+    res.json({
+      success: true,
+      count: sessionsWithQuestionnaires.length,
+      data: sessionsWithQuestionnaires
+    });
+
+  } catch (error) {
+    console.error('Error fetching sessions for admin:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error fetching sessions', 
+      error: error.message 
+    });
+  }
+};
+
+// @desc    Get a single session with questionnaire by ID for admin
+// @route   GET /api/sessions/admin/:id
+// @access  Private/Admin
+const getSessionByIdForAdmin = async (req, res) => {
+  try {
+    const session = await CounsellingSession.findById(req.params.id)
+      .populate('assignedCounsellor', 'name email phone')
+      .populate('createdBy', 'name email');
+
+    if (!session) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'Session not found' 
+      });
+    }
+    
+    const questionnaire = await Questionnaire.findOne({ session: session._id });
+    
+    res.json({
+      success: true,
+      data: {
+        session,
+        questions: questionnaire ? questionnaire.questions : []
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching session for admin:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error fetching session details', 
+      error: error.message 
+    });
+  }
+};
+
 module.exports = {
   createSession,
   getMySessions,
   getSessionById,
-  respondToSession
+  respondToSession,
+  getAllSessionsForAdmin,
+  getSessionByIdForAdmin
 }; 
