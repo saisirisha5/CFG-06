@@ -45,7 +45,7 @@ const LoginForm = ({ onError }) => {
                 );
                 
                 // Navigate to dashboard
-                navigate("/dashboard");
+                navigate("/admin/dashboard");
             } else {
                 onError(data.message || "Login failed");
             }
