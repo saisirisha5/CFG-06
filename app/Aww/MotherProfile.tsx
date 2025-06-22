@@ -1,5 +1,5 @@
-import { useRouter, useLocalSearchParams } from "expo-router";
-import React, { useState } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useState, useRef } from "react";
 import {
   FlatList,
   Image,
@@ -10,7 +10,11 @@ import {
   View,
   SafeAreaView,
   Dimensions,
+  Modal,
+  Alert,
 } from "react-native";
+import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
+import * as Location from 'expo-location';
 import Header from "../Header";
 import AppBar from "../Appbar";
 import { useLanguage } from "../LanguageContext";
@@ -54,6 +58,7 @@ interface FamilyMember {
 interface Mother {
   id: string;
   name: string;
+  translationKey?: string;
   age: string;
   week: string;
   lastVisit: string;
@@ -70,13 +75,18 @@ export default function MotherProfile() {
   const { familyId, name } = params;
   const { translate } = useLanguage();
   const [activeTab, setActiveTab] = useState("home");
+  const [cameraVisible, setCameraVisible] = useState(false);
+  const [cameraType, setCameraType] = useState<CameraType>('back');
+  const [permission, requestPermission] = useCameraPermissions();
+  const cameraRef = useRef<CameraView | null>(null);
   const responsive = getResponsiveDimensions();
-  const router = useRouter(); // Get the router instance using useRouter();
+  const router = useRouter();
 
   const mothers: Mother[] = [
     {
       id: '1',
-      name: 'mother_1_name',
+      name: 'Asha Devi',
+      translationKey: 'family_1_name',
       age: '26',
       week: '32',
       lastVisit: '2025-06-01',
@@ -88,17 +98,22 @@ export default function MotherProfile() {
         bp: '110/70 mmHg',
         risk: 'None',
       },
-      tips: ['tip_1_1', 'tip_1_2', 'tip_1_3', 'tip_1_4'],
-      notes: 'notes_1',
+      tips: [
+        'Eat iron-rich foods like spinach, lentils',
+        'Drink 2-3L water',
+        'Take iron & calcium supplements',
+        'Regular checkups',
+      ],
+      notes: 'Mother is showing positive improvements. Fetal movement is normal. No signs of swelling or anemia.',
       family: [
-        { name: 'family_1_1_name', relation: 'family_1_1_relation', age: 30 },
-        { name: 'family_1_2_name', relation: 'family_1_2_relation', age: 60 },
-        { name: 'family_1_3_name', relation: 'family_1_3_relation', age: 5 },
+        { name: 'Ramu', relation: 'Husband', age: 30 },
+        { name: 'Maya', relation: 'Mother-in-law', age: 60 },
+        { name: 'Chintu', relation: 'Elder Son', age: 5 },
       ],
     },
     {
       id: '2',
-      name: 'mother_2_name',
+      name: 'Sunita Kumari',
       age: '29',
       week: '20',
       lastVisit: '2025-05-20',
@@ -110,13 +125,18 @@ export default function MotherProfile() {
         bp: '115/75 mmHg',
         risk: 'Low',
       },
-      tips: ['tip_2_1', 'tip_2_2', 'tip_2_3'],
-      notes: 'notes_2',
-      family: [{ name: 'family_2_1_name', relation: 'family_2_1_relation', age: 33 }],
+      tips: [
+        'Avoid heavy lifting',
+        'Get enough sleep',
+        'Eat fruits and vegetables',
+      ],
+      notes: 'Needs more rest and better diet. Slight fatigue reported.',
+      family: [{ name: 'Suresh', relation: 'Husband', age: 33 }],
     },
     {
       id: '3',
-      name: 'mother_3_name',
+      name: 'Meena Singh',
+      translationKey: 'family_2_name',
       age: '27',
       week: '28',
       lastVisit: '2025-05-25',
@@ -128,21 +148,24 @@ export default function MotherProfile() {
         bp: '112/72 mmHg',
         risk: 'None',
       },
-      tips: ['tip_3_1', 'tip_3_2'],
-      notes: 'notes_3',
-      family: [{ name: 'family_3_1_name', relation: 'family_3_1_relation', age: 35 }],
+      tips: [
+        'Maintain regular sleep schedule',
+        'Moderate walking',
+      ],
+      notes: 'Healthy and active. Monitoring closely.',
+      family: [{ name: 'Vinod', relation: 'Husband', age: 35 }],
     },
   ];
 
   const families = [
     {
       id: "1",
-      name: "family_1_name",
+      name: "Devi Family",
       mothers: ["1", "2"],
     },
     {
       id: "2",
-      name: "family_2_name",
+      name: "Singh Family",
       mothers: ["3"],
     },
   ];
@@ -150,7 +173,8 @@ export default function MotherProfile() {
   const history: Mother[] = [
     {
       id: '4',
-      name: 'history_4_name',
+      name: 'Radha Patel',
+      translationKey: 'history_4_name',
       age: '31',
       week: '16',
       lastVisit: '2025-05-10',
@@ -162,13 +186,17 @@ export default function MotherProfile() {
         bp: '108/72 mmHg',
         risk: 'None',
       },
-      tips: ['tip_4_1', 'tip_4_2'],
-      notes: 'notes_4',
-      family: [{ name: 'family_4_1_name', relation: 'family_4_1_relation', age: 34 }],
+      tips: [
+        'Continue prenatal vitamins',
+        'Gentle walking daily',
+      ],
+      notes: 'Doing well. Reports better appetite and energy.',
+      family: [{ name: 'Ravi', relation: 'Husband', age: 34 }],
     },
     {
       id: '5',
-      name: 'history_5_name',
+      name: 'Kavita Joshi',
+      translationKey: 'history_5_name',
       age: '28',
       week: '24',
       lastVisit: '2025-05-18',
@@ -180,9 +208,12 @@ export default function MotherProfile() {
         bp: '100/70 mmHg',
         risk: 'Mild Anemia',
       },
-      tips: ['tip_5_1', 'tip_5_2'],
-      notes: 'notes_5',
-      family: [{ name: 'family_5_1_name', relation: 'family_5_1_relation', age: 31 }],
+      tips: [
+        'Increase iron intake',
+        'Regular blood checks',
+      ],
+      notes: 'Mild anemia detected. Iron supplements recommended.',
+      family: [{ name: 'Raj', relation: 'Husband', age: 31 }],
     },
   ];
 
@@ -213,6 +244,87 @@ export default function MotherProfile() {
     },
   });
 
+  // Camera functions
+  const requestPermissions = async () => {
+    if (!permission) {
+      const cameraResult = await requestPermission();
+      if (!cameraResult.granted) {
+        Alert.alert('Permission Required', 'Camera permission is required for attendance.');
+        return false;
+      }
+    }
+
+    const { status: locationStatus } = await Location.requestForegroundPermissionsAsync();
+    
+    if (permission?.granted && locationStatus === 'granted') {
+      return true;
+    } else {
+      Alert.alert('Permission Required', 'Camera and location permissions are required for attendance.');
+      return false;
+    }
+  };
+
+  const handleUploadAttendance = async () => {
+    const hasPermissions = await requestPermissions();
+    if (hasPermissions) {
+      setCameraVisible(true);
+    }
+  };
+
+  const toggleCameraType = () => {
+    setCameraType(current => 
+      current === 'back' ? 'front' : 'back'
+    );
+  };
+
+  const takePicture = async () => {
+    if (cameraRef.current) {
+      try {
+        // Get current location
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.High,
+        });
+
+        // Take picture
+        const photo = await cameraRef.current.takePictureAsync({
+          quality: 0.8,
+          base64: true,
+        });
+
+        // Log the data
+        console.log('📸 Attendance Photo Captured:');
+        console.log('📍 Location:', {
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+          accuracy: location.coords.accuracy,
+          timestamp: new Date(location.timestamp).toISOString(),
+        });
+        console.log('🖼️ Photo URI:', photo.uri);
+        console.log('📊 Photo Info:', {
+          width: photo.width,
+          height: photo.height,
+          base64Length: photo.base64?.length || 0,
+        });
+
+        // Close camera
+        setCameraVisible(false);
+        
+        // Show success message
+        Alert.alert(
+          '✅ Attendance Uploaded!', 
+          `Photo captured successfully!\n📍 Location: ${location.coords.latitude.toFixed(6)}, ${location.coords.longitude.toFixed(6)}\n⏰ Time: ${new Date().toLocaleString()}\n\nAttendance has been recorded.`
+        );
+
+        // Here you can add your upload logic to server
+        // uploadAttendanceToServer(photo, location);
+
+      } catch (error) {
+        console.error('Error taking picture or getting location:', error);
+        Alert.alert('❌ Error', 'Failed to capture attendance. Please try again.');
+      }
+    }
+  };
+
   // Family Mode: Display mothers in the selected family
   if (familyId) {
     const family = families.find((f) => f.id === familyId);
@@ -221,7 +333,7 @@ export default function MotherProfile() {
         <SafeAreaView style={{ flex: 1, backgroundColor: '#3a3a8a' }}>
           <Header />
           <View style={{ flex: 1, backgroundColor: "#e8f0ff", justifyContent: 'center', alignItems: 'center' }}>
-            <Text style={{ fontSize: 18, color: "#333" }}>{translate('familyNotFound')}</Text>
+            <Text style={{ fontSize: 18, color: "#333" }}>{translate("Family not found.")}</Text>
           </View>
           <AppBar activeTab={activeTab} setActiveTab={setActiveTab} />
         </SafeAreaView>
@@ -247,7 +359,7 @@ export default function MotherProfile() {
                 onPress={() =>
                   router.push({
                     pathname: "/Aww/MotherProfile",
-                    params: { name: translate(item.name) },
+                    params: { name: translate(item.translationKey || item.name) },
                   })
                 }
               >
@@ -265,7 +377,7 @@ export default function MotherProfile() {
                   ]}
                   numberOfLines={2}
                 >
-                  {translate(item.name)}
+                  {translate(item.translationKey || item.name)}
                 </Text>
               </TouchableOpacity>
             )}
@@ -278,50 +390,100 @@ export default function MotherProfile() {
 
   // Mother Mode: Display individual mother profile
   const allMothers = [...mothers, ...history];
-  const mother = allMothers.find((m) => translate(m.name) === name);
+  
+  const mother = allMothers.find((m) => {
+    const translatedName = translate(m.translationKey || m.name);
+    return translatedName === name || m.name === name;
+  });
 
   if (!mother) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: '#3a3a8a' }}>
         <Header />
         <View style={{ flex: 1, backgroundColor: "#e8f0ff", justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ fontSize: 18, color: "#333" }}>{translate('motherNotFound')}</Text>
+          <Text style={{ fontSize: 18, color: "#333" }}>{translate("Mother profile not found.")}</Text>
         </View>
         <AppBar activeTab={activeTab} setActiveTab={setActiveTab} />
       </SafeAreaView>
     );
   }
 
+  // MCQ data
+  const mcqQuestions = [
+    {
+      id: 1,
+      question: "Is she taking proper diet?",
+      options: ["Yes, regularly", "Sometimes", "No", "Not sure"],
+    },
+    {
+      id: 2,
+      question: "Is she taking iron tablets daily?",
+      options: ["Yes, daily", "Sometimes", "No", "Stopped taking"],
+    },
+    {
+      id: 3,
+      question: "Does she have any swelling in feet/hands?",
+      options: ["No swelling", "Mild swelling", "Moderate swelling", "Severe swelling"],
+    },
+    {
+      id: 4,
+      question: "How is her sleep pattern?",
+      options: ["Good (7-8 hours)", "Fair (5-6 hours)", "Poor (less than 5 hours)", "Disturbed"],
+    },
+    {
+      id: 5,
+      question: "Any unusual symptoms or complaints?",
+      options: ["None", "Mild discomfort", "Moderate issues", "Severe problems"],
+    },
+  ];
+
+  const [mcqAnswers, setMcqAnswers] = useState<{[key: number]: number}>({});
+
+  const handleMcqAnswer = (questionId: number, optionIndex: number) => {
+    setMcqAnswers(prev => ({
+      ...prev,
+      [questionId]: optionIndex
+    }));
+  };
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#3a3a8a' }}>
       <Header />
-      <ScrollView style={{ flex: 1, backgroundColor: "#e8f0ff", padding: 16 }}>
+      <ScrollView 
+        style={{ flex: 1, backgroundColor: "#e8f0ff", padding: 16 }}
+        contentContainerStyle={{ paddingBottom: 100 }}
+      >
         <View style={styles.header}>
-          <Image source={{ uri: mother.img }} style={styles.avatar} />
-          <Text style={styles.name}>{translate(mother.name)}</Text>
+          <View style={styles.profileImageContainer}>
+            <Image source={{ uri: mother.img }} style={styles.avatar} />
+            <TouchableOpacity style={styles.uploadButton} onPress={handleUploadAttendance}>
+              <Text style={styles.uploadButtonText}>📸 {translate("Take Attendance")}</Text>
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.name}>{translate(mother.translationKey || mother.name)}</Text>
           <Text style={styles.subtitle}>
-            {translate('age')}: {mother.age} | {translate('week')}: {mother.week}
+            {translate("Age")}: {mother.age} | {translate("Week")}: {mother.week}
           </Text>
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>{translate('visitInfo')}</Text>
-          <Text style={styles.text}>{translate('lastVisit')}: {mother.lastVisit}</Text>
-          <Text style={styles.text}>{translate('nextVisit')}: {mother.nextVisit}</Text>
+          <Text style={styles.cardTitle}>{translate("Visit Info")}</Text>
+          <Text style={styles.text}>{translate("Last Visit")}: {mother.lastVisit}</Text>
+          <Text style={styles.text}>{translate("Next Visit")}: {mother.nextVisit}</Text>
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>{translate('summary')}</Text>
-          <Text style={styles.text}>{translate('weight')}: {mother.summary.weight}</Text>
-          <Text style={styles.text}>{translate('hb')}: {mother.summary.hb}</Text>
-          <Text style={styles.text}>{translate('bp')}: {mother.summary.bp}</Text>
+          <Text style={styles.cardTitle}>{translate("Summary")}</Text>
+          <Text style={styles.text}>{translate("Weight")}: {mother.summary.weight}</Text>
+          <Text style={styles.text}>{translate("Hemoglobin")}: {mother.summary.hb}</Text>
+          <Text style={styles.text}>{translate("Blood Pressure")}: {mother.summary.bp}</Text>
           <Text style={styles.text}>
-            {translate('risk')}: {translate(`risk_${mother.summary.risk.replace(' ', '_').toLowerCase()}`)}
+            {translate("Risk")}: {translate(mother.summary.risk)}
           </Text>
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>{translate('counsellingTips')}</Text>
+          <Text style={styles.cardTitle}>{translate("Counselling Tips")}</Text>
           {mother.tips.map((tip, index) => (
             <Text key={index} style={styles.bullet}>
               • {translate(tip)}
@@ -330,19 +492,123 @@ export default function MotherProfile() {
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>{translate('notes')}</Text>
+          <Text style={styles.cardTitle}>{translate("Notes")}</Text>
           <Text style={styles.text}>{translate(mother.notes)}</Text>
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>{translate('familyMembers')}</Text>
+          <Text style={styles.cardTitle}>{translate("Family Members")}</Text>
           {mother.family.map((member, index) => (
             <Text key={index} style={styles.text}>
-              {translate(member.name)} - {translate(member.relation)} ({member.age} {translate('years')})
+              {translate(member.name)} - {translate(member.relation)} ({member.age} {translate("yrs")})
             </Text>
           ))}
         </View>
+
+        <View style={[styles.card, { marginBottom: 24 }]}>
+          <Text style={styles.cardTitle}>{translate("Health Assessment")}</Text>
+          {mcqQuestions.map((question) => (
+            <View key={question.id} style={styles.mcqContainer}>
+              <Text style={styles.mcqQuestion}>{translate(question.question)}</Text>
+              {question.options.map((option, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={[
+                    styles.mcqOption,
+                    mcqAnswers[question.id] === index && styles.mcqOptionSelected
+                  ]}
+                  onPress={() => handleMcqAnswer(question.id, index)}
+                >
+                  <View style={[
+                    styles.radioButton,
+                    mcqAnswers[question.id] === index && styles.radioButtonSelected
+                  ]} />
+                  <Text style={[
+                    styles.mcqOptionText,
+                    mcqAnswers[question.id] === index && styles.mcqOptionTextSelected
+                  ]}>
+                    {translate(option)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          ))}
+          
+          <TouchableOpacity style={styles.submitButton}>
+            <Text style={styles.submitButtonText}>{translate("Submit Assessment")}</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
+
+      {/* Camera Modal */}
+      <Modal
+        visible={cameraVisible}
+        animationType="slide"
+        onRequestClose={() => setCameraVisible(false)}
+      >
+        <View style={styles.cameraContainer}>
+          {!permission ? (
+            <View style={styles.cameraPlaceholder}>
+              <Text style={styles.permissionText}>Requesting camera permissions...</Text>
+            </View>
+          ) : !permission.granted ? (
+            <View style={styles.cameraPlaceholder}>
+              <Text style={styles.permissionText}>Camera permission required</Text>
+              <TouchableOpacity 
+                style={styles.permissionButton}
+                onPress={requestPermission}
+              >
+                <Text style={styles.permissionButtonText}>Grant Permission</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.closeButton}
+                onPress={() => setCameraVisible(false)}
+              >
+                <Text style={styles.closeButtonText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <>
+              <CameraView
+                ref={cameraRef}
+                style={styles.camera}
+                facing={cameraType}
+              />
+              
+              {/* Camera Controls */}
+              <View style={styles.cameraControls}>
+                <TouchableOpacity
+                  style={styles.cameraControlButton}
+                  onPress={() => setCameraVisible(false)}
+                >
+                  <Text style={styles.cameraControlText}>✕</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  style={styles.captureButton}
+                  onPress={takePicture}
+                >
+                  <View style={styles.captureButtonInner} />
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  style={styles.cameraControlButton}
+                  onPress={toggleCameraType}
+                >
+                  <Text style={styles.cameraControlText}>🔄</Text>
+                </TouchableOpacity>
+              </View>
+              
+              {/* Attendance Info Overlay */}
+              <View style={styles.attendanceInfo}>
+                <Text style={styles.attendanceInfoText}>📍 Capturing attendance with location</Text>
+                <Text style={styles.attendanceInfoSubText}>Make sure you're at the visit location</Text>
+              </View>
+            </>
+          )}
+        </View>
+      </Modal>
+
       <AppBar activeTab={activeTab} setActiveTab={setActiveTab} />
     </SafeAreaView>
   );
@@ -354,14 +620,37 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 24,
   },
+  profileImageContainer: {
+    position: 'relative',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
   avatar: {
     width: 130,
     height: 130,
     borderRadius: 65,
     borderWidth: 3,
     borderColor: "#3a3a8a",
-    marginBottom: 12,
     alignSelf: "center",
+  },
+  uploadButton: {
+    backgroundColor: "#4CAF50",
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 25,
+    marginTop: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  uploadButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "700",
   },
   name: {
     fontSize: 26,
@@ -413,5 +702,180 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     textAlign: "center",
     lineHeight: 18,
+  },
+  // MCQ Styles
+  mcqContainer: {
+    marginBottom: 20,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  mcqQuestion: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 12,
+    lineHeight: 22,
+  },
+  mcqOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginBottom: 8,
+    borderRadius: 8,
+    backgroundColor: "#f8f9fa",
+    borderWidth: 1,
+    borderColor: "#e9ecef",
+  },
+  mcqOptionSelected: {
+    backgroundColor: "#e3f2fd",
+    borderColor: "#3a3a8a",
+  },
+  radioButton: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 2,
+    borderColor: "#ccc",
+    marginRight: 12,
+    backgroundColor: "#fff",
+  },
+  radioButtonSelected: {
+    borderColor: "#3a3a8a",
+    backgroundColor: "#3a3a8a",
+  },
+  mcqOptionText: {
+    fontSize: 15,
+    color: "#555",
+    flex: 1,
+  },
+  mcqOptionTextSelected: {
+    color: "#3a3a8a",
+    fontWeight: "500",
+  },
+  submitButton: {
+    backgroundColor: "#4CAF50",
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  submitButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  // Camera Styles
+  cameraContainer: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
+  camera: {
+    flex: 1,
+  },
+  cameraPlaceholder: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#000',
+    padding: 20,
+  },
+  permissionText: {
+    color: '#fff',
+    fontSize: 18,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  permissionButton: {
+    backgroundColor: '#4CAF50',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  permissionButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  cameraControls: {
+    position: 'absolute',
+    bottom: 50,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  cameraControlButton: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  cameraControlText: {
+    color: '#fff',
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  captureButton: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 4,
+    borderColor: '#fff',
+  },
+  captureButtonInner: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#fff',
+  },
+  closeButton: {
+    backgroundColor: '#ff4444',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  closeButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  attendanceInfo: {
+    position: 'absolute',
+    top: 60,
+    left: 20,
+    right: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    padding: 15,
+    borderRadius: 10,
+  },
+  attendanceInfoText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  attendanceInfoSubText: {
+    color: '#ccc',
+    fontSize: 14,
+    textAlign: 'center',
+    marginTop: 5,
   },
 });
