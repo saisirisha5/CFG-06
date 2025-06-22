@@ -27,10 +27,10 @@ const AdminLayout = () => {
                     </div>
                     <nav className="flex-1 overflow-y-auto py-4">
                         <ul className="space-y-2">
-                            <li><NavItem icon={Home} label="Dashboard" to="/dashboard" isCollapsed={isSidebarCollapsed} /></li>
+                            <li><NavItem icon={Home} label="Dashboard" to="/admin/dashboard" isCollapsed={isSidebarCollapsed} /></li>
                             <li><NavItem icon={Plus} label="Sessions" to="/admin/sessions" isCollapsed={isSidebarCollapsed} /></li>
-                            <li><NavItem icon={Users} label="Counsellors" to="/counsellors" isCollapsed={isSidebarCollapsed} /></li>
-                            <li><NavItem icon={BarChart3} label="Analytics" to="/analytics" isCollapsed={isSidebarCollapsed} /></li>
+                            <li><NavItem icon={Users} label="Counsellors" to="/admin/counsellors" isCollapsed={isSidebarCollapsed} /></li>
+                            <li><NavItem icon={BarChart3} label="Analytics" to="/admin/analytics" isCollapsed={isSidebarCollapsed} /></li>
                         </ul>
                     </nav>
                     <div className="mt-auto border-t p-4">
